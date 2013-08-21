@@ -83,8 +83,7 @@ unsigned char SDO_pin(void);
 void SDI_pin(unsigned char value);
 void spiWrite(const unsigned char regData);
 
-
- 
+unsigned char contador;
 
 void main (void)
 {
@@ -155,6 +154,21 @@ void main (void)
 	
 	
 	spiWrite(0xA5);
+	
+	
+	while (1) {
+	
+	
+	LOAD_pin(ON);
+	LOAD_pin(OFF);
+	
+	LOAD_pin(ON);
+	LOAD_pin(OFF);
+	
+	
+	spiWrite(contador++);
+	
+	}
 /*	
 	for (SPICount = 0; SPICount < 200; SPICount++) 
 	{
