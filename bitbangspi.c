@@ -157,29 +157,23 @@ void main (void)
 	
 	
 	while (1) {
-	
-	
-	LOAD_pin(ON);
+
 	LOAD_pin(OFF);
-	
 	LOAD_pin(ON);
+	
+	
 	LOAD_pin(OFF);
+	LOAD_pin(ON);
+	
+	
+	
 	
 	
 	spiWrite(contador++);
 	
 	}
-/*	
-	for (SPICount = 0; SPICount < 200; SPICount++) 
-	{
-		SCK_pin(ON);
-		SCK_pin(OFF);
-	}
-*/	
-	
-	
-	
-	
+
+
 
 } 
 
@@ -195,6 +189,8 @@ void spiWrite(const unsigned char regData)
   SPIData = regData;                                    // Preload the data to be sent 
 
 
+  
+
   for (SPICount = 0; SPICount < 8; SPICount++)          // Prepare to clock out the Address & Data
   {
     if (SPIData & 0x80)
@@ -205,6 +201,9 @@ void spiWrite(const unsigned char regData)
     SCK_pin(ON);
     SCK_pin(OFF);
     SPIData <<= 1;
+    
+    
+      
   }                                                     // and loop back to send the next bit   
 
   SDI_pin(OFF);                                         // Reset the MOSI data line
