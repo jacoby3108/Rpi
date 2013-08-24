@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// bitbang v0
+// bitbang v2 todo ok
 
 // Pin file system
 
@@ -45,7 +45,7 @@
 
 //echo "17" > /sys/class/gpio/export
 //echo "out" > /sys/class/gpio/gpio17/direction
-
+//cat /sys/class/gpio/gpio9/value
 
 #define ON '1'
 #define OFF '0'
@@ -66,7 +66,7 @@ int handle_direction;
 
 
 unsigned char val='0';      //Value written to led (Warning use '0' or '1' not 0 or 1)
-unsigned char sens;         // Value returned by photosensor
+unsigned char sens='0';         // Value returned by photosensor
 
 int nWritten,nread;  // bytes read or written during file operations
 
@@ -81,9 +81,12 @@ void SCK_pin(unsigned char value);
 void LOAD_pin(unsigned char value);
 unsigned char SDO_pin(void);
 void SDI_pin(unsigned char value);
-void spiWrite(const unsigned char regData);
+unsigned char spiWrite(const unsigned char regData);
 
 unsigned char contador;
+unsigned char read_data;
+
+int i,j,k;
 
 void main (void)
 {
@@ -101,17 +104,54 @@ void main (void)
 // And export pins
 	
 	nWritten=write(handle_export,PIN_LED,sizeof(PIN_LED)-1); 
+	
+	if (nWritten==-1){
+	fprintf(stdout, "Cannot open EXPORT File for PIN LED. Try again later.\n");
+//	exit(1);
+	}
+	
+	
 	nWritten=write(handle_export,PIN_SENS,sizeof(PIN_SENS)-1); 
+	if (nWritten==-1){
+	fprintf(stdout, "Cannot open EXPORT File for PIN SENS. Try again later.\n");
+//	exit(1);
+	}
+		
+	
 	nWritten=write(handle_export,PIN_SDI,sizeof(PIN_SDI)-1);
+	
+	if (nWritten==-1){
+	fprintf(stdout, "Cannot open EXPORT File for PIN SDI. Try again later.\n");
+//	exit(1);
+	}
+	
 	nWritten=write(handle_export,PIN_LOAD,sizeof(PIN_LOAD)-1);
+	
+	if (nWritten==-1){
+	fprintf(stdout, "Cannot open EXPORT File for PIN LOAD. Try again later.\n");
+//	exit(1);
+	}
+	
+	
 	nWritten=write(handle_export,PIN_SCK,sizeof(PIN_SCK)-1);
+	
+	if (nWritten==-1){
+	fprintf(stdout, "Cannot open EXPORT File for PIN SCK. Try again later.\n");
+//	exit(1);
+	}
+	
+	
 	nWritten=write(handle_export,PIN_SDO,sizeof(PIN_SDO)-1);
+	
+	if (nWritten==-1){
+	fprintf(stdout, "Cannot open EXPORT File for PIN SDO. Try again later.\n");
+//	exit(1);
+	}
 
 // Set pins Directions
 	
 	Set_PIN_Direction(DIR_LED,"out");
 	Set_PIN_Direction(DIR_SENS,"in");
-	
 	
 	Set_PIN_Direction(DIR_SDI,"out");
 	Set_PIN_Direction(DIR_LOAD,"out");
@@ -127,13 +167,13 @@ void main (void)
 // Get pins handles to have access to pins
 	
 	handle_led = Get_Port_handle(LED,O_WRONLY);
-	handle_sens = Get_Port_handle(SENS,O_RDONLY);
+//	handle_sens = Get_Port_handle(SENS,O_RDONLY);
 	
 
 	handle_sdi = Get_Port_handle(SDI,O_WRONLY);
 	handle_load = Get_Port_handle(LOAD,O_WRONLY);	
 	handle_sck = Get_Port_handle(SCK,O_WRONLY);
-	handle_sdo = Get_Port_handle(SDO,O_RDONLY);
+//	handle_sdo = Get_Port_handle(SDO,O_RDONLY);
 	
 /////////////////////////////////////////////////////////////////////////	
 	
@@ -147,13 +187,12 @@ void main (void)
 	
 	sleep(1);  // wait to turn on/off led before reading (processor is to fast :))
 	
-	
-	sens=SENSOR_pin();
-	
-	printf ("Sensor Read Back %c Done !\n\n",sens);
-	
-	
-	spiWrite(0xA5);
+	for(i=0;i<5;i++)
+	{
+		sens=SENSOR_pin();
+		printf ("Sensor Read Back %c Done !\n\n",sens);
+	}
+
 	
 	
 	while (1) {
@@ -166,10 +205,10 @@ void main (void)
 	LOAD_pin(ON);
 	
 	
+	 printf("Read Value (bin): ");
+	read_data=spiWrite(contador++);
 	
-	
-	
-	spiWrite(contador++);
+	printf(" Data read (Hex) %X\n ",read_data);
 	
 	}
 
@@ -178,14 +217,15 @@ void main (void)
 } 
 
 
-void spiWrite(const unsigned char regData)
+unsigned char spiWrite(const unsigned char regData)
 {
 
   unsigned char SPICount;                               // Counter used to clock out the data
   unsigned char SPIData;                                // Define a data structure for the SPI data.
-  
+  unsigned char SDO_value;
+  unsigned char SDO_DATA=0;
  
-  SCK_pin(OFF);                                          // and CK low
+  SCK_pin(ON);                                          // and CK low
   SPIData = regData;                                    // Preload the data to be sent 
 
 
@@ -198,15 +238,32 @@ void spiWrite(const unsigned char regData)
     else
       SDI_pin(OFF);
       
+  
+    SCK_pin(OFF); 
+    SDO_value=SDO_pin();
     SCK_pin(ON);
-    SCK_pin(OFF);
+    
+     SDO_DATA <<=1;
+    
+    if (SDO_value==ON)
+
+	SDO_DATA|=1;	
+    else    
+    
+       	SDO_DATA&=~1;	
+    
+   
+    	
     SPIData <<= 1;
     
-    
+     
+      putchar(SDO_value);
       
   }                                                     // and loop back to send the next bit   
-
+ 
   SDI_pin(OFF);                                         // Reset the MOSI data line
+
+return(SDO_DATA);
 }
 
 
@@ -222,9 +279,11 @@ unsigned char SENSOR_pin(void)
 {
 
    unsigned char sensor;
+   unsigned char handle_sensor;
+   handle_sens = Get_Port_handle(SENS,O_RDONLY);
+   read(handle_sens,&sensor,3);   // read data,CR,LF //int  read(  int  handle,  void  *buffer,  int  nbyte );
+   close(handle_sens);
    
-   read(handle_sens,&sensor,1);  //int  read(  int  handle,  void  *buffer,  int  nbyte );
-
    return sensor;
 
 }
@@ -252,8 +311,7 @@ void SCK_pin(unsigned char value)
 
 
     write(handle_sck,&value,1); // int  write(  int  handle,  void  *buffer,  int  nbyte  );
-    
-
+   
 }
 
 
@@ -262,18 +320,14 @@ unsigned char SDO_pin(void)
 {
 
    unsigned char serial_out;
-   
+   unsigned char handle_sdo;
+  
+   handle_sdo = Get_Port_handle(SDO,O_RDONLY);   
    read(handle_sdo,&serial_out,1);  //int  read(  int  handle,  void  *buffer,  int  nbyte );
-
+   close(handle_sdo);
    return serial_out;
 
 }
-
-
-
-
-
-
 
 
 // Open device port 
