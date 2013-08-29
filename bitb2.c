@@ -40,6 +40,8 @@ unsigned char MISO_pin(void);
 int MOSI_pin(unsigned char value);
 unsigned char spiWrite(const unsigned char regData);
 
+void enable_gpio(void);	
+void set_gpio_direcction (void);	
 
 
 unsigned char contador,sens;
@@ -54,54 +56,15 @@ int i,j,k;
 int main(int argc, char *argv[])
 
 {
+
+
 ///usleep(500 * 1000);
 
-
-	/*
-	 * Enable GPIO pins
-	 */
-
-	 
-	if (GPIOExport(PIN_LED) ==-1)
-		return(1);
-	if (GPIOExport(PIN_SENS) ==-1)
-		return(1);
-	if (GPIOExport(PIN_MOSI) ==-1)
-		return(1);
-	if (GPIOExport(PIN_LOAD) ==-1)
-		return(1);	
-	if (GPIOExport(PIN_SCK) ==-1)
-		return(1);	
-	if (GPIOExport(PIN_MISO) ==-1)
-		return(1);	
-		
-/*
- * Set GPIO directions
- */		
-		
-		
-	if (GPIODirection(PIN_LED,OUT) ==-1)
-		return(1);
-	if (GPIODirection(PIN_SENS,IN) ==-1)
-		return(1);
-	if (GPIODirection(PIN_MOSI,OUT) ==-1)
-		return(1);
-	if (GPIODirection(PIN_LOAD,OUT) ==-1)
-		return(1);	
-	if (GPIODirection(PIN_SCK,OUT) ==-1)
-		return(1);	
-	if (GPIODirection(PIN_MISO,IN) ==-1)
-		return(1);	
-	
-	
-		
-
-
-	
+	enable_gpio();
+	set_gpio_direcction();
 	
 
-
-/////////////////////////////////////////////////////////////////////////	
+////////////////////////// Test Led and Fotototransistor //////////////////////////////	
 	
 	
 	
@@ -118,7 +81,7 @@ int main(int argc, char *argv[])
 
 	sleep(2);  // time to read on screen
 
-///////////////////////77	
+///////////////////////SPI Test Bed ///////////////////////////	
 	
 	while (1) {
 
@@ -183,7 +146,7 @@ unsigned char spiWrite(const unsigned char regData)
     MISO_value=MISO_pin();
     SCK_pin(ON);
     
-     MISO_DATA <<=1;					// Pre-Shift
+     MISO_DATA <<=1;					// 1st time dummy Shift
     
     if (MISO_value==ON)
 
@@ -208,7 +171,7 @@ return(MISO_DATA);
 }
 
 
-
+//////////////////////////////// Low low Level functions //////////////////////
 
 
 int LED_pin(unsigned char value)
@@ -220,11 +183,10 @@ int LED_pin(unsigned char value)
 
 unsigned char SENSOR_pin(void)
 {
-
-   
+ 
    
   return(GPIORead(PIN_SENS));
-   
+  
 
 }
 
@@ -254,7 +216,6 @@ int SCK_pin(unsigned char value)
     	if ( GPIOWrite(PIN_SCK, value) == -1)
 			return(3); 
 }
-
 
 
 unsigned char MISO_pin(void)
@@ -377,6 +338,53 @@ int GPIOWrite(int pin, int value)
 
 	close(fd);
 	return(0);
+}
+
+		
+		
+/*=======================================
+	  Enable GPIO pins
+========================================*/
+void enable_gpio(void)		
+{
+
+	 
+	if (GPIOExport(PIN_LED) ==-1)
+		return(1);
+	if (GPIOExport(PIN_SENS) ==-1)
+		return(1);
+	if (GPIOExport(PIN_MOSI) ==-1)
+		return(1);
+	if (GPIOExport(PIN_LOAD) ==-1)
+		return(1);	
+	if (GPIOExport(PIN_SCK) ==-1)
+		return(1);	
+	if (GPIOExport(PIN_MISO) ==-1)
+		return(1);	
+}
+
+
+/*==============================
+     Set GPIO directions
+ ==============================*/		
+void set_gpio_direcction (void)		
+{
+
+// Pleavoid set_gpio_direcction (void)	se put all I/O definitions here !!!
+		
+	if (GPIODirection(PIN_LED,OUT) ==-1)
+		return(1);
+	if (GPIODirection(PIN_SENS,IN) ==-1)
+		return(1);
+	if (GPIODirection(PIN_MOSI,OUT) ==-1)
+		return(1);
+	if (GPIODirection(PIN_LOAD,OUT) ==-1)
+		return(1);	
+	if (GPIODirection(PIN_SCK,OUT) ==-1)
+		return(1);	
+	if (GPIODirection(PIN_MISO,IN) ==-1)
+		return(1);	
+		
 }
 
 

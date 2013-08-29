@@ -9,10 +9,10 @@
 
 #define PIN_LED  17  	// LED Port  /* P1-xx */
 #define PIN_SENS 22  	// Fototransistor Port
-#define PIN_SDI  10  	// SPI MOSI to 74hc595
+#define PIN_MOSI  10  	// SPI MOSI to 74hc595
 #define PIN_LOAD 23	// LOAD Parallel Input register 74hc589 (Toggle twice)
 #define PIN_SCK  11 	// SPI clock 
-#define PIN_SDO  9	// SPI MISO from 74hc589
+#define PIN_MISO  9	// SPI MISO from 74hc589
 
 
 //echo "17" > /sys/class/gpio/export
@@ -36,10 +36,12 @@ int LED_pin(unsigned char value);
 unsigned char SENSOR_pin(void);
 int SCK_pin(unsigned char value);
 int LOAD_pin(unsigned char value);
-unsigned char SDO_pin(void);
-int SDI_pin(unsigned char value);
+unsigned char MISO_pin(void);
+int MOSI_pin(unsigned char value);
 unsigned char spiWrite(const unsigned char regData);
 
+void enable_gpio(void);	
+void set_gpio_direcction (void);	
 
 
 unsigned char contador,sens;
@@ -54,54 +56,15 @@ int i,j,k;
 int main(int argc, char *argv[])
 
 {
+
+
 ///usleep(500 * 1000);
 
-
-	/*
-	 * Enable GPIO pins
-	 */
-
-	 
-	if (GPIOExport(PIN_LED) ==-1)
-		return(1);
-	if (GPIOExport(PIN_SENS) ==-1)
-		return(1);
-	if (GPIOExport(PIN_SDI) ==-1)
-		return(1);
-	if (GPIOExport(PIN_LOAD) ==-1)
-		return(1);	
-	if (GPIOExport(PIN_SCK) ==-1)
-		return(1);	
-	if (GPIOExport(PIN_SDO) ==-1)
-		return(1);	
-		
-/*
- * Set GPIO directions
- */		
-		
-		
-	if (GPIODirection(PIN_LED,OUT) ==-1)
-		return(1);
-	if (GPIODirection(PIN_SENS,IN) ==-1)
-		return(1);
-	if (GPIODirection(PIN_SDI,OUT) ==-1)
-		return(1);
-	if (GPIODirection(PIN_LOAD,OUT) ==-1)
-		return(1);	
-	if (GPIODirection(PIN_SCK,OUT) ==-1)
-		return(1);	
-	if (GPIODirection(PIN_SDO,IN) ==-1)
-		return(1);	
-	
-	
-		
-
-
-	
+	enable_gpio();
+	set_gpio_direcction();
 	
 
-
-/////////////////////////////////////////////////////////////////////////	
+////////////////////////// Test Led and Fotototransistor //////////////////////////////	
 	
 	
 	
@@ -118,7 +81,7 @@ int main(int argc, char *argv[])
 
 	sleep(2);  // time to read on screen
 
-///////////////////////77	
+///////////////////////SPI Test Bed ///////////////////////////	
 	
 	while (1) {
 
@@ -143,13 +106,13 @@ int main(int argc, char *argv[])
 		return(4);
 	if (GPIOUnexport(PIN_SENS) ==-1)
 		return(4);
-	if (GPIOUnexport(PIN_SDI) ==-1)
+	if (GPIOUnexport(PIN_MOSI) ==-1)
 		return(4);
 	if (GPIOUnexport(PIN_LOAD) ==-1)
 		return(4);	
 	if (GPIOUnexport(PIN_SCK) ==-1)
 		return(4);	
-	if (GPIOUnexport(PIN_SDO) ==-1)
+	if (GPIOUnexport(PIN_MISO) ==-1)
 		return(4);	
 		
 	return(0);
@@ -162,10 +125,10 @@ unsigned char spiWrite(const unsigned char regData)
 
   unsigned char SPICount;              // Counter used to clock out the data
   unsigned char SPIData;               // Define a data structure for the SPI data.
-  unsigned char SDO_value;
-  unsigned char SDO_DATA=0;
+  unsigned char MISO_value;
+  unsigned char MISO_DATA=0;
  
-  SCK_pin(ON);                         // and CK low
+  SCK_pin(ON);                         // and CK High
   SPIData = regData;                   // Preload the data to be sent 
 
 
@@ -174,41 +137,41 @@ unsigned char spiWrite(const unsigned char regData)
   for (SPICount = 0; SPICount < 8; SPICount++)          // Prepare to clock out the Address & Data
   {
     if (SPIData & 0x80)
-      SDI_pin(ON);
+      MOSI_pin(ON);
     else
-      SDI_pin(OFF);
+      MOSI_pin(OFF);
       
   
     SCK_pin(OFF); 
-    SDO_value=SDO_pin();
+    MISO_value=MISO_pin();
     SCK_pin(ON);
     
-     SDO_DATA <<=1;
+     MISO_DATA <<=1;					// 1st time dummy Shift
     
-    if (SDO_value==ON)
+    if (MISO_value==ON)
 
-	SDO_DATA|=1;	
+	MISO_DATA|=1;	
     else    
     
-       	SDO_DATA&=~1;	
+       	MISO_DATA&=~1;	
     
    
     	
     SPIData <<= 1;
     
      
-     printf("%d",SDO_value);
+     printf("%d",MISO_value);
       
   }                                                     // and loop back to send the next bit   
  
-  SDI_pin(OFF);                                         // Reset the MOSI data line
+  MOSI_pin(OFF);                                         // Reset the MOSI data line
 
-return(SDO_DATA);
+return(MISO_DATA);
 
 }
 
 
-
+//////////////////////////////// Low low Level functions //////////////////////
 
 
 int LED_pin(unsigned char value)
@@ -220,20 +183,19 @@ int LED_pin(unsigned char value)
 
 unsigned char SENSOR_pin(void)
 {
-
-   
+ 
    
   return(GPIORead(PIN_SENS));
-   
+  
 
 }
 
 
-int SDI_pin(unsigned char value)
+int MOSI_pin(unsigned char value)
 {
 
 		 
-	if ( GPIOWrite(PIN_SDI, value) == -1)
+	if ( GPIOWrite(PIN_MOSI, value) == -1)
 			return(3);
 }
 
@@ -256,11 +218,10 @@ int SCK_pin(unsigned char value)
 }
 
 
-
-unsigned char SDO_pin(void)
+unsigned char MISO_pin(void)
 {
 
-    return(GPIORead(PIN_SDO));
+    return(GPIORead(PIN_MISO));
 }
 
 
@@ -377,6 +338,53 @@ int GPIOWrite(int pin, int value)
 
 	close(fd);
 	return(0);
+}
+
+		
+		
+/*=======================================
+	  Enable GPIO pins
+========================================*/
+void enable_gpio(void)		
+{
+
+	 
+	if (GPIOExport(PIN_LED) ==-1)
+		return(1);
+	if (GPIOExport(PIN_SENS) ==-1)
+		return(1);
+	if (GPIOExport(PIN_MOSI) ==-1)
+		return(1);
+	if (GPIOExport(PIN_LOAD) ==-1)
+		return(1);	
+	if (GPIOExport(PIN_SCK) ==-1)
+		return(1);	
+	if (GPIOExport(PIN_MISO) ==-1)
+		return(1);	
+}
+
+
+/*==============================
+     Set GPIO directions
+ ==============================*/		
+void set_gpio_direcction (void)		
+{
+
+// Pleavoid set_gpio_direcction (void)	se put all I/O definitions here !!!
+		
+	if (GPIODirection(PIN_LED,OUT) ==-1)
+		return(1);
+	if (GPIODirection(PIN_SENS,IN) ==-1)
+		return(1);
+	if (GPIODirection(PIN_MOSI,OUT) ==-1)
+		return(1);
+	if (GPIODirection(PIN_LOAD,OUT) ==-1)
+		return(1);	
+	if (GPIODirection(PIN_SCK,OUT) ==-1)
+		return(1);	
+	if (GPIODirection(PIN_MISO,IN) ==-1)
+		return(1);	
+		
 }
 
 
