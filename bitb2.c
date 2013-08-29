@@ -40,8 +40,8 @@ unsigned char MISO_pin(void);
 int MOSI_pin(unsigned char value);
 unsigned char spiWrite(const unsigned char regData);
 
-void enable_gpio(void);	
-void set_gpio_direcction (void);	
+unsigned int  enable_gpio(void);	
+unsigned int set_gpio_direcction (void);	
 
 
 unsigned char contador,sens;
@@ -93,10 +93,13 @@ int main(int argc, char *argv[])
 	LOAD_pin(ON);
 	
 	
-	 printf("Read Value (bin): ");
-	read_data=spiWrite(contador++);
-	
+	printf("Read Value (bin): ");
+//	read_data=spiWrite(contador++);
+
+	read_data=spiWrite(read_data);
 	printf(" Data read (Hex) %X\n ",read_data);
+	
+	
 	
 	}
 
@@ -345,7 +348,7 @@ int GPIOWrite(int pin, int value)
 /*=======================================
 	  Enable GPIO pins
 ========================================*/
-void enable_gpio(void)		
+unsigned int enable_gpio(void)		
 {
 
 	 
@@ -361,13 +364,16 @@ void enable_gpio(void)
 		return(1);	
 	if (GPIOExport(PIN_MISO) ==-1)
 		return(1);	
+		
+	return(0);	
+		
 }
 
 
 /*==============================
      Set GPIO directions
  ==============================*/		
-void set_gpio_direcction (void)		
+unsigned int set_gpio_direcction (void)		
 {
 
 // Pleavoid set_gpio_direcction (void)	se put all I/O definitions here !!!
@@ -383,7 +389,9 @@ void set_gpio_direcction (void)
 	if (GPIODirection(PIN_SCK,OUT) ==-1)
 		return(1);	
 	if (GPIODirection(PIN_MISO,IN) ==-1)
-		return(1);	
+		return(1);
+		
+	return(0);	
 		
 }
 
