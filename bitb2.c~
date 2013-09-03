@@ -40,8 +40,8 @@ unsigned char MISO_pin(void);
 int MOSI_pin(unsigned char value);
 unsigned char spiWrite(const unsigned char regData);
 
-void enable_gpio(void);	
-void set_gpio_direcction (void);	
+unsigned int  enable_gpio(void);	
+unsigned int set_gpio_direcction (void);	
 
 
 unsigned char contador,sens;
