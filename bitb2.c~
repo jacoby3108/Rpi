@@ -42,7 +42,9 @@ unsigned char spiWrite(const unsigned char regData);
 
 unsigned int  enable_gpio(void);	
 unsigned int set_gpio_direcction (void);	
+unsigned int un_export_used_gpios(void);
 
+void strobe_load_pin(void);
 
 unsigned char contador,sens;
 unsigned char read_data;
@@ -81,42 +83,30 @@ int main(int argc, char *argv[])
 
 	sleep(2);  // time to read on screen
 
-///////////////////////SPI Test Bed ///////////////////////////	
+///////////////////////SPI Test Bed ///////////////////////////////	
 	
 	while (1) {
 
-	LOAD_pin(OFF);
-	LOAD_pin(ON);
+
 	
-	
-	LOAD_pin(OFF);
-	LOAD_pin(ON);
-	
-	
-	printf("Read Value (bin): ");
 //	read_data=spiWrite(contador++);
 
 	read_data=spiWrite(read_data);
 	printf(" Data read (Hex) %X\n ",read_data);
+// Read / Write secuence
+// If we have 3 output SR at MOSI output and 2 input SR in cascade  	
+/// 1-send data 3 times read_data will be discarted each time
+/// 2-Toggle Load pin twice
+/// 3-Send Dummy data twice and save each recieved byte
 	
+	strobe_load_pin();
+	strobe_load_pin();	
 	
 	
 	}
 
-/////////////////////
-	 
-	if (GPIOUnexport(PIN_LED) ==-1)
-		return(4);
-	if (GPIOUnexport(PIN_SENS) ==-1)
-		return(4);
-	if (GPIOUnexport(PIN_MOSI) ==-1)
-		return(4);
-	if (GPIOUnexport(PIN_LOAD) ==-1)
-		return(4);	
-	if (GPIOUnexport(PIN_SCK) ==-1)
-		return(4);	
-	if (GPIOUnexport(PIN_MISO) ==-1)
-		return(4);	
+
+	un_export_used_gpios();
 		
 	return(0);
 
@@ -135,9 +125,9 @@ unsigned char spiWrite(const unsigned char regData)
   SPIData = regData;                   // Preload the data to be sent 
 
 
-  
+  printf("Read Value (bin): ");
 
-  for (SPICount = 0; SPICount < 8; SPICount++)          // Prepare to clock out the Address & Data
+  for (SPICount = 0; SPICount < 8; SPICount++)          // Prepare to clock out Data
   {
     if (SPIData & 0x80)
       MOSI_pin(ON);
@@ -343,6 +333,13 @@ int GPIOWrite(int pin, int value)
 	return(0);
 }
 
+
+// Strobe Load Pin ... more later (too lazy now!!)  
+void strobe_load_pin(void)
+{
+	LOAD_pin(OFF);
+	LOAD_pin(ON);
+}
 		
 		
 /*=======================================
@@ -395,9 +392,29 @@ unsigned int set_gpio_direcction (void)
 		
 }
 
+/*==============================
+    	Unexport GPIO 
+ ==============================*/		
+unsigned int un_export_used_gpios(void)		
+{
 
+	 
+	if (GPIOUnexport(PIN_LED) ==-1)
+		return(4);
+	if (GPIOUnexport(PIN_SENS) ==-1)
+		return(4);
+	if (GPIOUnexport(PIN_MOSI) ==-1)
+		return(4);
+	if (GPIOUnexport(PIN_LOAD) ==-1)
+		return(4);	
+	if (GPIOUnexport(PIN_SCK) ==-1)
+		return(4);	
+	if (GPIOUnexport(PIN_MISO) ==-1)
+		return(4);
 
-
+	return(0);	
+		
+}
 
 
 
