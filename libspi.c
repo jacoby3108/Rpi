@@ -185,9 +185,9 @@ void poll_spi(void)
 			b_read_data[0]=read_data1;  /// latch buffered data 
 			b_read_data[1]=read_data2;
 	
-	print_binary(read_data1);
-	print_binary(read_data2);
-	printf("\n");
+//	print_binary(read_data1);
+//	print_binary(read_data2);
+//	printf("\n");
 				
 		}	
 		
@@ -211,7 +211,7 @@ void poll_spi(void)
 //	print_binary(read_data2);
 //	printf("\n");
 
-		printf("hat boto: %d \n",hay_boton);
+//		printf("hat boto: %d \n",hay_boton);
 
 }
 

@@ -14,7 +14,7 @@ void * thread1()  // Time base
 {
         while(1) {
                
-		usleep(100*1000); // 100ms * 
+		usleep(20*1000); // 100ms * 
 
 		if (beeptime)
 			beeptime--;
@@ -26,7 +26,7 @@ void * thread1()  // Time base
 void * thread2() // Periodic Task
 
 {
-	//init_spi();
+	init_spi();
 	while (1) 
 	{
 		
@@ -52,25 +52,56 @@ void * thread3() // Tateti task
 
 {
 
-unsigned char val[3]={0x80,0x00,0x00};
+unsigned char val[3]={0x7f,0xff,0xff};
+int input=0;
 written=FALSE;
+write_tablero(val);
 
 	while (1) {
-	
-//////		printf("tateti ");
 	
 		write_tablero(val);
 
 		sleep(1);
 
-		val[0]^=0x80;
 
 
 		if (Get_Key_Status()){
 	
 			keys_ptr=Get_Key();
-	
-			printf("Keys = 1: %X 2: %X \n",keys_ptr[0],keys_ptr[1]);
+			input=(keys_ptr[0]<<8)|keys_ptr[1];
+			printf ("%x\n",input);
+			/*switch (input)
+			{
+				case 0xFFFE:
+					val [1]=0x01;
+					break;
+				case 0xFFEF:
+					val [1]=0x02;
+					break;
+				case 0xFF7F:
+					val [1]=0x04;
+					break;
+				case 0xFFFB:
+					val [1]=0x08;
+					break;
+				case 0xFFDF:
+					val [1]=0x10;
+					break;
+				case 0xFDFF:
+					val [1]=0x20;
+					break;
+				case 0xFFF7:
+					val [1]=0x40;
+					break;
+				case 0xFFBF:
+					val [1]=0x80;
+					break;
+				case 0xFEFF:
+					val [0]=0x01;
+					break;*/
+			//}
+			write_tablero (val);
+//			printf("Keys = 1: %X 2: %X \n",keys_ptr[0],keys_ptr[1]);
 	
 		}
 	

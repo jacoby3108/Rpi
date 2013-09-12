@@ -316,7 +316,6 @@ void read_n_save(char turn)
 					input2=9;
 					break;
 			}
-		input2=conv_to_format(input2);
 		if(((input2&p1)==0)&&((input2&rpi)==0))		//Validacion de no ocupar un casillero ya ocupado
 		{
 			p1=input2|p1;				//Si se intenta llenar un casillero ya ocupado, pide nuevo valor
